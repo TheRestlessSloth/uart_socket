@@ -1,5 +1,4 @@
 import socket
-import serial
 from time import sleep
 
 #=-----------------config----------------
@@ -7,26 +6,16 @@ from time import sleep
 host = "192.168.0.104"
 port = 65432
 
-#uart
-ttyn = "/dev/ttyS0"
-baudrt = 9600
-
 d_del = 0.1
-ser = serial.Serial(ttyn, baudrt)
 
-def uart_rx():
-	#data collection from uart
-    r_data = ser.read()
-    sleep(0.03)
-    d_left = ser.inWaiting()
-    r_data += ser.read(d_left)
-    return str(r_data)
 
 def rx_md(conn):
+	data = 0
 	while True:
-    	data = uart_rx()
+    	data += 1 
 		if not data:
 			break
+		d = str(data)
 		conn.sendall(data.encode())
 
 def tx_md(conn):
@@ -34,10 +23,7 @@ def tx_md(conn):
     	data = conn.recv(1024).decode()
 		if data == -666:
 			break
-		ser.write(data)
-
-def main_p(conn):
-	
+		print(data)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 	s.bind((host,port))
