@@ -8,22 +8,24 @@ port = 65432
 
 d_del = 0.1
 
+def uart_rx():
+	#Max's code
+	return data
+
 def rx_md(conn):
-	data = 0
 	while True:
-		if data == 100:
+		data = uart_rx()
+		if not data:
 			break
-		sleep(d_del)
-		data += 1
-		d = str(data) 
-		conn.sendall(d.encode())
+		sleep(d_del) 
+		conn.sendall(data)
 
 def tx_md(conn):
 	while True:
 		data = conn.recv(1024)
 		if data == -666:
 			break
-		print(data)
+		#ser.write(data)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 	s.bind((host,port))
