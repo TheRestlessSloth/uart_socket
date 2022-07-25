@@ -17,17 +17,17 @@ def uart_rx():
 
 def rx_md(conn):
 	while True:
+		if conn.recv(1024) == "exit":
+			break
 		data = uart_rx()
-		#if not data:
-			#break
 		sleep(d_del) 
 		conn.sendall(data)
 
 def tx_md(conn):
 	while True:
 		data = conn.recv(1024)
-		#if data == -666:
-			#break
+		if data == "exit":
+			break
 		ser.write(str(data).encode("ascii"))
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
