@@ -1,5 +1,7 @@
 import socket
 import serial
+from multiprocessing import Process
+import os
 from time import sleep
 
 #classes and methods
@@ -63,9 +65,11 @@ class main_prog:
             return True
     
     def main_lp(self):
+        p1 = Process(target=self.rx_md)
+        p2 = Process(target=self.tx_md)
         while True:
-            self.tx_md()
-            self.rx_md()
+            p1.start()
+            p2.start()
 
     def old_lp(self):
         while True:
