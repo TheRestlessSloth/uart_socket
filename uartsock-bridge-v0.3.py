@@ -45,7 +45,7 @@ class main_prog:
     def connect(self):
         self.server = SOCKETcls(self.__host,self.__port)
         self.uart = UARTcls(self.__ser_port,self.__baud)
-    
+
     def rx_md(self):
         rx_data = self.uart.uart_rx().decode("ascii").strip()
         if rx_data == "stop":
@@ -63,13 +63,6 @@ class main_prog:
         else:
             self.uart.uart_tx(tx_data.encode("ascii"))
             return True
-    
-    def main_lp(self):
-        p1 = Process(target=self.rx_md)
-        p2 = Process(target=self.tx_md)
-        while True:
-            p1.start()
-            p2.start()
 
     def old_lp(self):
         while True:
@@ -90,6 +83,23 @@ class main_prog:
             else:
                 continue
 
+class new_prog(main_prog):
+    def new_rx (self):
+        while self.rx_md():
+            pass
+    
+    def new_tx (self):
+        while self.tx_md():
+            pass
+
+    def main_lp(self):
+        p1 = Process(target=self.new_rx)
+        p2 = Process(target=self.new_tx)
+        p1.start()
+        p2.start()
+        p1.join()
+        p2.join()
+
 #=-----------------config----------------
 host = "192.168.0.101"#"192.169.3.98"
 port = 65432
@@ -97,12 +107,13 @@ ser_port = "/dev/serial0"
 baud = 9600
 
 #program
-mp = main_prog(host,port,ser_port,baud)
-mp.connect()
-with mp.server.conn:
-    print(f"Connected by {mp.server.addr}")
-    #main_program
-    #main_lp(conn)
-    mp.old_lp()
-mp.server.conn.close()
-print("Disconnected")
+if __name__ == "__main__":
+    mp = new_prog(host,port,ser_port,baud)
+    mp.connect()
+    with mp.server.conn:
+        print(f"Connected by {mp.server.addr}")
+        #main_program
+        mp.main_lp()
+        #mp.old_lp()
+    mp.server.conn.close()
+    print("Disconnected")
