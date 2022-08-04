@@ -11,12 +11,15 @@ class UARTcls:
         self.ser_port = ser_port
         self.baud = baud
         self.ser = serial.Serial(self.ser_port, self.baud)
+    
     def uart_rx(self):
         return self.ser.readline()
+    
     def uart_tx(self,data):
         self.ser.write(data)
         self.ser.write("\r\n".encode("ascii"))
-    
+
+
 class SOCKETcls:
     #SOCKET CLASS
     def __init__(self,host,port):
@@ -28,12 +31,14 @@ class SOCKETcls:
         self.s.bind((self.__host,self.__port))
         self.s.listen()
         self.conn, self.addr = self.s.accept()
+    
     def sock_rx(self):
-        self.conn.recv(1024).decode("ascii","ignore").strip()
         return self.conn.recv(1024).decode("ascii","ignore").strip()
+    
     def sock_tx(self, data):
         self.conn.sendall(data)
         self.conn.sendall("\r\n".encode("ascii"))
+
 
 class main_prog:
     def __init__(self,host,port,ser_port,baud):
@@ -49,6 +54,7 @@ class main_prog:
     def rx_md(self):
         rx_data = self.uart.uart_rx().decode("ascii").strip()
         if rx_data == "stop":
+            print("stopped from uart")
             return False
         else:
             self.server.sock_tx(rx_data.encode("ascii"))
@@ -59,6 +65,7 @@ class main_prog:
         if not tx_data:
             return True
         if tx_data == "stop":
+            print("stopped from socket")
             return False
         else:
             self.uart.uart_tx(tx_data.encode("ascii"))
@@ -83,6 +90,7 @@ class main_prog:
             else:
                 continue
 
+
 class new_prog(main_prog):
     def new_rx (self):
         while self.rx_md():
@@ -100,10 +108,11 @@ class new_prog(main_prog):
         p1.join()
         p2.join()
 
+
 #=-----------------config----------------
-host = "192.168.0.101"#"192.169.3.98"
+host = "192.168.0.106"#"192.169.3.98"
 port = 65432
-ser_port = "/dev/serial0"
+ser_port = "/dev/ttyUSB0"
 baud = 9600
 
 #program
