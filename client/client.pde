@@ -9,20 +9,21 @@ Serial serial;
 GButton btn0, btn1, btn2;
 GDropList dlist;
 GTextArea text;
+GTextField text2;
 
 public void setup(){
   size(400,200);
   
-  btn0 = new GButton(this, off, h/2-bh-off, bw, bh, "Att");
+  btn0 = new GButton(this, off, off+bh, bw, bh, "Att");
   btn0.setLocalColorScheme(G4P.GREEN_SCHEME);
   
-  btn1 = new GButton(this, off, h/2, bw, bh, "Det");
+  btn1 = new GButton(this, off+bw, off+bh, bw, bh, "Det");
   btn1.setLocalColorScheme(G4P.RED_SCHEME);
   
   btn2 = new GButton(this, 3*off+2*bw, h/2-bh/2, bw, bh, "trans");
   btn2.setLocalColorScheme(G4P.YELLOW_SCHEME);
   
-  dlist = new GDropList(this, 50, 50, 50, 50);
+  dlist = new GDropList(this, off, off, bw*2, bh*4);
   String ser_list[] = Serial.list();
   for(int i = 0; i<ser_list.length;i++)
     dlist.addItem(ser_list[i]);
@@ -30,15 +31,19 @@ public void setup(){
   text = new GTextArea(this,180,30,150,120);
   text.setFocus(true);
   
+  text2 = new GTextField(this,180,180,150,70);
+  text2.setFocus(true);
+  
 }
 
 public void draw(){
   background(240);
-  if(keyPressed && key == ENTER)
-  {
-      print(text.getText());
+    if(keyPressed && key == ENTER)
+    {
+      serial.write(trim(text.getText())+"\n");
       text.setText("");
-  }
+      delay(200);
+    }
 }
 
 /**
