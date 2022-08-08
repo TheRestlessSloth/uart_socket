@@ -143,7 +143,7 @@ class PictureModule:
 
 
 # -----------------config----------------
-HOST = "192.168.0.104"  # "192.169.3.98"
+HOST = "10.32.31.15"  # "192.169.3.98"
 PORT = 65432
 SER_PORT = "/dev/ttyUSB0"
 BAUD = 9600
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     mp.connect()
     with mp.server.conn:
         print(f"Connected by {mp.server.addr}")
-        pm.send_pic_uart("12.jpg",mp)
+        pm.send_pic_uart("./files/12.jpg",mp)
         # main_program
         mp.main_lp()
         # mp.old_lp()
