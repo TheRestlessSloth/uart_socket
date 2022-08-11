@@ -9,7 +9,7 @@ class Uart:
         self.ser = serial.Serial(self.SER_PORT, self.BAUD)
 
     def rx(self):
-        return self.ser.readline()
+        return self.ser.readline().decode("ascii").strip()
 
     def tx(self, data):
         self.ser.write(data)
