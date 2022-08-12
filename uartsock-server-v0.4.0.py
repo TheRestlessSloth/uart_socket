@@ -8,9 +8,9 @@ from multiprocessing import Process
 
 
 # -----------------config----------------
-HOST = "10.32.31.17"  # "192.169.3.98"
+HOST = "192.169.3.99"
 PORT = 65432
-SER_PORT = "/dev/ttyUSB1"
+SER_PORT = "/dev/serial0"
 BAUD = 9600
 commands = {'stop':-1,'send':2,'sendfft':3}
 im_src = "./files/test.png"
@@ -47,6 +47,8 @@ class MultiThread(MainProg):
             if ret == -1:
                 break
             elif ret == 2:
+                self.uart.tx("preambl".encode("ascii"))
+                sleep(2)
                 self.pm.send_pic(im_src,self.uart)
             elif ret == 3:
                 self.pm.send_pic_fft(im_src,self.uart)
