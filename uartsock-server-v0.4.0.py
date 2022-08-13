@@ -50,6 +50,8 @@ class MultiThread(MainProg):
             if ret == -1:
                 break
             elif ret == 2:
+                self.uart.tx("preambl".encode("ascii"))
+                sleep(2)
                 self.pm.send_pic(im_src,self.uart)
             elif ret == 3:
                 self.pm.send_pic_fft(im_src,self.uart)
