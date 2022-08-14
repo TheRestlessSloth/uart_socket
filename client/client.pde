@@ -147,7 +147,7 @@ void fileWork(){
   
   for (String pathname : pathnames){
     if (pathname.endsWith(".conf"))
-      ipProfileArea.appendText("- " + pathname);
+      ipProfileArea.appendText(pathname);
   }
 }
 
@@ -416,7 +416,8 @@ public void handleButtonEvents(GButton button, GEvent event){
       
       saveStrings(ipProfileField.getText()+".conf", conDat);
       
-      ipProfileArea.appendText("-" + ipProfileField.getText()+".conf");
+      ipProfileArea.appendText(ipProfileField.getText()+".conf");
+      ipProfileField.setText("");
     }
     if (button == ipProfileLoad){
       String[] linesData = loadStrings("E:/Games/Learning/Proceesing_Proj/client/"+ipProfileArea.getSelectedText());
@@ -427,6 +428,8 @@ public void handleButtonEvents(GButton button, GEvent event){
     if (button == ipProfileDel){
       File needProf = new File("E:/Games/Learning/Proceesing_Proj/client/"+ipProfileArea.getSelectedText());
       needProf.delete();
+      ipProfileArea.setText("");
+      fileWork();
     }
   }
  }
