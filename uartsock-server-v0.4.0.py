@@ -80,6 +80,7 @@ class MultiThread(MainProg):
 
 
 def main():
+    a = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     mp = MultiThread(HOST, PORT, SER_PORT, BAUD)
     mp.connect()
     with mp.sock.conn:
