@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 
 sys.path.insert(1, "./modules")
 
@@ -7,13 +8,11 @@ from uart_module import *
 from sock_module import *
 from pic_module import *
 from time import sleep
-from multiprocessing import Process
-
 
 # -----------------config----------------
-HOST = "192.168.0.103"  # "192.169.3.98"
+HOST = "192.168.43.4"  # "192.169.3.98"
 PORT = 65432
-SER_PORT = "COM1"
+SER_PORT = "COM3"
 BAUD = 9600
 commands = {'stop':-1,'send':2,'sendfft':3}
 im_src = "./files/test.png"
@@ -71,8 +70,8 @@ class MultiThread(MainProg):
                 pass
                           
     def main_lp(self):
-        self.ust_p = Process(target = self.uart_sock_thread)
-        self.sut_p = Process(target = self.sock_uart_thread)
+        self.ust_p = threading.Thread(target = self.uart_sock_thread)
+        self.sut_p = threading.Thread(target = self.sock_uart_thread)
         self.ust_p.start()
         self.sut_p.start()
         self.ust_p.join()
