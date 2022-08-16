@@ -9,7 +9,10 @@ class Uart:
         self.ser = serial.Serial(self.SER_PORT, self.BAUD)
 
     def rx(self):
-        return self.ser.readline().decode("ascii").strip()
+        if self.ser.inWaiting():
+            return self.ser.readline().decode("ascii").strip()
+        else:
+            return "none"
 
     def tx(self, data):
         self.ser.write(data)
