@@ -10,7 +10,7 @@ from time import sleep
 import threading as thr
 
 
-# -----------------config----------------
+# -----------------config----------------   
 HOST = "10.32.31.23"  # "192.169.3.98"
 PORT = 65432
 SER_PORT = "COM3"
