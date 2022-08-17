@@ -12,5 +12,5 @@ class Uart:
         return self.ser.readline().decode("ascii").strip()
 
     def tx(self, data):
-        self.ser.write(data)
+        self.ser.write(data.encode("ascii"))
         self.ser.write("\r\n".encode("ascii"))
