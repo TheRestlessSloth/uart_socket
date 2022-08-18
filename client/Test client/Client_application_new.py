@@ -1,10 +1,12 @@
-import socket
 import os
 import serial.tools.list_ports
 
+from sock_module import *
 from uart_module import *
 from genericpath import isfile
+from tkinter import filedialog
 from time import localtime
+from multiprocessing import Process
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 
@@ -65,6 +67,7 @@ class Ui_MainWindow(object):
         self.consoleArea.setMaximumSize(QtCore.QSize(350, 16777215))
         self.consoleArea.setStyleSheet("background-color: white")
         self.consoleArea.setObjectName("consoleArea")
+        self.consoleArea.setReadOnly(True)
         self.ConsoleAndButtonsLayout.addWidget(self.consoleArea)
 
         self.changer_mode = QtWidgets.QSlider(self.centralwidget)
@@ -119,6 +122,7 @@ class Ui_MainWindow(object):
         self.messageArea.setGeometry(QtCore.QRect(440, 9, 350, 161))
         self.messageArea.setStyleSheet("background-color: white")
         self.messageArea.setObjectName("messageArea")
+        self.messageArea.setReadOnly(True)
 
         self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 270, 361, 58))
@@ -348,7 +352,7 @@ class Ui_MainWindow(object):
         self.ProfButtonsLayout.addWidget(self.ipPoffileSave)
 
         self.ipProfileLoad = QtWidgets.QPushButton(self.verticalLayoutWidget_6)
-        self.ipProfileLoad.setStyleSheet("background-color: blue")
+        self.ipProfileLoad.setStyleSheet("background-color: rgb(0,125,255)")
         self.ipProfileLoad.setObjectName("ipProfileLoad")
         self.ProfButtonsLayout.addWidget(self.ipProfileLoad)
 
@@ -372,17 +376,17 @@ class Ui_MainWindow(object):
         self.stackedWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        #LOGIC-------------------------------------------------------------------------------------------------------------------------------------------
+# LOGIC-------------------------------------------------------------------------------------------------------------------------------------------
 
         ser_list = serial.tools.list_ports.comports()
         for port, desc, hwid in ser_list:
             self.portChooser.addItem("{}".format(port))
 
-        self.portConBtn.clicked.connect(self.portConnect)
-        self.portDConBtn.clicked.connect(self.portDConnect)
-
         self.ip_con.clicked.connect(self.clientCon)
         self.ip_dcon.clicked.connect(self.clientDcon)
+
+        self.portConBtn.clicked.connect(self.portConnect)
+        self.portDConBtn.clicked.connect(self.portDConnect)
 
         Baud_S = ["300", "1200", "2400", "4800", "9600", "19200", "38400", "57600", "74880", "115200", "230400", "250000", "500000", "1000000", "2000000"]
         for baud in Baud_S:
@@ -403,6 +407,9 @@ class Ui_MainWindow(object):
         self.ipProfileLoad.clicked.connect(self.profLoad)
         self.ipProfileDel.clicked.connect(self.profDelete)
 
+        self.picBrowseBtn.clicked.connect(self.imageSelector)
+# ------------------------------------------------------------------------------------------------------------------------------------------------------
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "UART-Socket Bridge Client"))
@@ -410,7 +417,7 @@ class Ui_MainWindow(object):
         self.clearTextBtn.setText(_translate("MainWindow", "Clear"))
         self.sendTextBtn.setText(_translate("MainWindow", "Send"))
         self.progTitle.setText(_translate("MainWindow", "UART - SOCKET BRIDGE"))
-        self.authorsTitle.setText(_translate("MainWindow", "by D*Max & Abkerimov T.V."))
+        self.authorsTitle.setText(_translate("MainWindow", "by Dimin M. & Abkerimov T.V."))
         self.picField.setPlaceholderText(_translate("MainWindow", "Image way..."))
         self.picBrowseBtn.setText(_translate("MainWindow", "Browse"))
         self.picTransBtn.setText(_translate("MainWindow", "Transmit image"))
@@ -431,26 +438,29 @@ class Ui_MainWindow(object):
         self.ipProfileLoad.setText(_translate("MainWindow", "Load"))
         self.ipProfileDel.setText(_translate("MainWindow", "Delete"))
 
-#Logic-----------------------------------------------------------------------------------------
+# CONNECTION -------------------------------------------------------------------------------------------------------------------------------------------
     def chooserMode(self, s_pos):
         self.stackedWidget.setCurrentIndex(s_pos)
         if s_pos == 0:
-            self.portDConBtn.clicked.connect(self.portDConnect)
+            self.portDConBtn.click
         else:
-            self.ip_dcon.clicked.connect(self.clientDcon)
+            self.ip_dcon.click
 
     def clearFunc(self):
         self.messageArea.clear()
 
     def clientCon(self):
         ip = self.ent_ip.text()
+        ip_port = self.ent_port.text()
         try:
+            self.sock = Socket(ip, int(ip_port))
             self.consoleArea.appendPlainText("Client connected with "+ip)
         except:
-            self.consoleArea.appendPlainText("Client already disconnected or troubled") 
+            self.consoleArea.appendPlainText("Trouble with connection! Client not connected!") 
 
     def clientDcon(self):
         try:
+            self.sock.s.close()
             self.consoleArea.appendPlainText("Client disconnected")
         except:
             self.consoleArea.appendPlainText("Client already disconnected or troubled") 
@@ -464,8 +474,6 @@ class Ui_MainWindow(object):
 
             self.consoleArea.appendPlainText("Connected to " + PORT)
         except:
-            self.consoleArea.appendPlainText(PORT)
-            self.consoleArea.appendPlainText(BAUD)
             self.consoleArea.appendPlainText("Trouble with connection to COM!")
 
     def portDConnect(self):
@@ -475,6 +483,7 @@ class Ui_MainWindow(object):
         except:
             self.consoleArea.appendPlainText("Port already discconected or not found!")
 
+# MESSAGE -----------------------------------------------------------------------------------------------------------------------------------
     def message_send(self):
         tm = localtime()
         text = self.entMessageField.text()
@@ -484,8 +493,9 @@ class Ui_MainWindow(object):
         try:
             self.uart.tx(text)
         except:
-            self.consoleArea.appendPlainText("Trouble")
+            pass
 
+# PROFILES ------------------------------------------------------------------------------------------------------------------------------------
     def profSave(self):
         conDat = [self.ent_ip.text(), self.ent_port.text()]
         f = open(self.ipProfileField.text()+".conf", 'w')
@@ -496,14 +506,17 @@ class Ui_MainWindow(object):
     
     def profLoad(self):
         path = "D:/Test_clientApp/"
-        data = str(self.listWidget.currentItem().text())
-        if os.path.isfile(path+data):
-            f = open(path+data, 'r')
-            self.ent_ip.setText(f.readline())  
-            self.ent_port.setText(f.__next__())
-            f.close()
-        else:
-            self.consoleArea.appendPlainText("Profile not found!")
+        try:
+            data = str(self.listWidget.currentItem().text())
+            if os.path.isfile(path+data):
+                f = open(path+data, 'r')
+                self.ent_ip.setText(f.readline())  
+                self.ent_port.setText(f.__next__())
+                f.close()
+            else:
+                self.consoleArea.appendPlainText("Profile not found!")
+        except:
+            self.consoleArea.appendPlainText("Profile not selected")
 
     def profDelete(self):
         path = "D:/Test_clientApp/"
@@ -522,4 +535,35 @@ class Ui_MainWindow(object):
             if file.endswith(".conf"):
                 self.listWidget.addItem(file)
 
-# ---------------------------------------------------------------------------
+# Image part-----------------------------------------------------------------------------------------------------------------------------------
+
+    def imageSelector(self):
+        filetypes = (("Text file", "*.txt"),("Image", "*.jpg *.png"), ("Any", "*"))
+        filename = filedialog.askopenfilename(title="Open file", initialdir="/", filetypes=filetypes)
+        if filename:
+            self.picField.setText(filename)
+
+"""
+class Logic(Ui_MainWindow):
+"""
+
+
+
+
+class RxMultProc(Ui_MainWindow):
+    def sock_rx(self):
+        while True:
+            self.uart.rx()
+            
+    def ser_rx(self):
+        while True:
+            self.sock.rx()
+    
+    def main_lp(self):
+        self.socrx_p = Process(target=self.sock_rx)
+        self.serrx_p = Process(target=self.ser_rx)
+        self.socrx_p.start()
+        self.serrx_p.start()
+
+        self.socrx_p.join()
+        self.serrx_p.join()
