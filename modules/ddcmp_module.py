@@ -2,7 +2,7 @@ from time import sleep
 from uart_module import *
 import threading
 
-com = "COM4"
+com = "COM1"
 baud = 9600
 encoding = "utf-8"
 
