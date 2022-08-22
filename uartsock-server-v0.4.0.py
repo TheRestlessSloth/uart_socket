@@ -1,12 +1,15 @@
 import os
 import sys
+from modules.com_module import ComModule
 
 sys.path.insert(1, "./modules")
 
 from uart_module import *
 from sock_module import *
 from pic_module import *
+from com_module import *
 from time import sleep
+import binascii
 import threading as thr
 
 
@@ -15,7 +18,7 @@ HOST = "10.32.31.23"  # "192.169.3.98"
 PORT = 65432
 SER_PORT = "COM3"
 BAUD = 9600
-commands = {'stop':-1,'send':2,'sendfft':3}
+commands = {'stop':-1,'send':2,'sendfft':3,'connect':4,'disconnect':5,'send mes':6}
 im_src = "./files/test.png"
 
 
@@ -27,6 +30,7 @@ class MainProg:
         self.SER_PORT = ser_port
         self.BAUD = baud
         self.pm = PictureModule()
+        self.com = ComModule()
 
     def connect(self):
         self.sock = Socket(self.HOST, self.PORT)
@@ -64,9 +68,24 @@ class MultiThread(MainProg):
             if ret == -1:
                 break
             elif ret == 2:
-                self.uart.tx("send".encode("ascii"))
+                self.uart.tx("send")
             elif ret == 3:
-                self.uart.tx("sendfft".encode("ascii"))
+                self.uart.tx("sendfft")
+            elif ret == 4:
+                self.sock.tx("Which adress?")
+                addr = self.sock.rx()
+                self.uart.tx(self.com.command(f"F","1,1,{addr}"))
+            elif ret == 5:
+                pass
+            elif ret == 6:
+                self.sock.tx("Which adress?")
+                addr = self.sock.rx()
+                self.sock.tx("num of retries?")
+                retr = self.sock.rx()
+                self.sock.tx("message?")
+                mes = self.sock.rx()
+                mes = binascii.hexlify(mes.encode("ascii"))
+                self.uart.tx(self.com.command(f"G","{addr},{retr},{mes}"))
             else:
                 pass
                           

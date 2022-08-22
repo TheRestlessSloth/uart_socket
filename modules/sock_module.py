@@ -14,7 +14,7 @@ class Socket:
         self.conn, self.addr = self.s.accept()
 
     def rx(self):
-        return self.conn.recv(1024).decode("ascii", "ignore").strip()
+        return self.conn.recv(1024).decode("ascii", "replace").strip()
 
     def tx(self, data):
         self.conn.sendall(data)

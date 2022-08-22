@@ -12,7 +12,7 @@ class Uart:
 
     def rx(self):
         if self.ser.inWaiting():
-            return self.ser.readline().decode(self.encoding).strip()
+            return self.ser.readline().decode(self.encoding, "replace").strip()
 
     def tx(self, data):
         self.ser.write(data.encode(self.encoding))
