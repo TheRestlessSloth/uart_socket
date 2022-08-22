@@ -13,5 +13,5 @@ class ComModule:
         id = id
         body = body
         mes_body = f"PUVW{id},{body}"
-        hs = self.hash_sum(mes_body) 
-        print(f"${mes_body}*{hs}<CR><LF>")
+        hs = self.hash_sum(mes_body)
+        return f"${mes_body}*{hs}"

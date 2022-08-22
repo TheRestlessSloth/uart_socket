@@ -14,12 +14,13 @@ import threading as thr
 
 
 # -----------------config----------------   
-HOST = "10.32.31.23"  # "192.169.3.98"
+HOST = "192.169.10.110"
 PORT = 65432
-SER_PORT = "COM3"
+SER_PORT = "/dev/serial0"
 BAUD = 9600
 commands = {'stop':-1,'send':2,'sendfft':3,'connect':4,'disconnect':5,'send mes':6}
 im_src = "./files/test.png"
+flag = True
 
 
 class MainProg:
@@ -33,28 +34,31 @@ class MainProg:
         self.com = ComModule()
 
     def connect(self):
-        self.sock = Socket(self.HOST, self.PORT)
-        self.uart = Uart(self.SER_PORT, self.BAUD)
+        self.sock = Socket(self.HOST, self.PORT, "ascii")
+        self.uart = Uart(self.SER_PORT, self.BAUD, "ascii")
 
     def transmit(self,src1,src2):
         data = src1.rx()
         if not data:
             return 1
         if commands.get(data):
+            print(commands.get(data))
             return commands[data]
         else:
-            src2.tx(data.encode("ascii"))
+            print(data)
+            src2.tx(data)
             return 1
 
 
 class MultiThread(MainProg):
     def uart_sock_thread(self):
-        while True:
+        global flag
+        while flag:
             ret = self.transmit(self.uart,self.sock)
             if ret == -1:
                 break
             elif ret == 2:
-                self.uart.tx("preambl".encode("ascii"))
+                self.uart.tx("preambl")
                 sleep(2)
                 self.pm.send_pic(im_src,self.uart)
             elif ret == 3:
@@ -63,7 +67,8 @@ class MultiThread(MainProg):
                 pass
 
     def sock_uart_thread(self):
-        while True:
+        global flag
+        while flag:
             ret = self.transmit(self.sock,self.uart)
             if ret == -1:
                 break
@@ -72,20 +77,36 @@ class MultiThread(MainProg):
             elif ret == 3:
                 self.uart.tx("sendfft")
             elif ret == 4:
+                flag = False
                 self.sock.tx("Which adress?")
-                addr = self.sock.rx()
-                self.uart.tx(self.com.command(f"F","1,1,{addr}"))
+                addr = None
+                while addr == None: addr = self.sock.rx(1)
+                comm = self.com.command("F",f"1,1,{addr}")
+                print(comm)
+                self.uart.tx(comm)
+                flag = True
             elif ret == 5:
                 pass
             elif ret == 6:
+                flag = False
+                
                 self.sock.tx("Which adress?")
-                addr = self.sock.rx()
+                addr = None
+                while addr == None: addr = self.sock.rx().strip()
+                
                 self.sock.tx("num of retries?")
-                retr = self.sock.rx()
+                retr = None
+                while retr == None: retr = self.sock.rx().strip()
+                
                 self.sock.tx("message?")
-                mes = self.sock.rx()
-                mes = binascii.hexlify(mes.encode("ascii"))
-                self.uart.tx(self.com.command(f"G","{addr},{retr},{mes}"))
+                mes = None
+                while mes == None: mes = self.sock.rx().strip()
+                bytearr = bytearray(mes.encode("ascii"))
+                mesarr = list(byte for byte in bytearr)
+                comm = self.com.command("G",f"{addr},{retr},{mesarr}")
+                print(comm)
+                self.uart.tx(comm)
+                flag = True
             else:
                 pass
                           
