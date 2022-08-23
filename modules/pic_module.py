@@ -18,7 +18,7 @@ class PictureModule:
             if not s:
                 break
             p.feed(s)
-            send_to.tx(s)
+            send_to.tx(s.decode("ascii"))
         p.close()
 
     def send_pic_fft(self, path, send):
@@ -31,5 +31,5 @@ class PictureModule:
                 if not s:
                     break
                 p.feed(s)
-                send.tx(s)
+                send.tx(s.decode("ascii"))
             p.close()

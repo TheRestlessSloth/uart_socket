@@ -12,6 +12,14 @@ class Socket:
         self.s.bind((self.HOST, self.PORT))
         self.s.listen()
         self.conn, self.addr = self.s.accept()
+    
+    def rx_until(self,nbytes):
+        data = None
+        while True: 
+            data = self.rx(nbytes)
+            if data:
+                break
+        return data
 
     def rx(self,nbytes=1024):
         return self.conn.recv(nbytes).decode(self.encoding, "ignore").strip()
