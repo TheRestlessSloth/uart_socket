@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+from unicodedata import decimal
 from modules.uart_module import Uart
 
 sys.path.insert(1, "./modules")
@@ -19,7 +20,9 @@ HOST = "192.168.0.103"
 PORT = 65432
 SER_PORT = "COM3"
 BAUD = 9600
-socket_commands = {'stop':-1,'send':2,'sendpic':3,'connect':4,'disconnect':5,'send mes':6}
+socket_commands = {'stop':-1, 'send':2, 'sendpic':3, 
+                   'connect':4, 'default':5, 'send mes':6,
+                   'auto':7}
 uart_commands = {'stop':-1}
 im_src = "./files/test.png"
 list_threads = []
@@ -58,16 +61,35 @@ class MainProg:
             message = message.split(",")
             id = message[0][-1]
             args = message[1:-1]
-            farg = message[-1].split("*")[0]
-            args.append(farg)
-            return id,args
+            farg = message[-1].split("*")
+            args.append(farg[0])
+            hr = farg[1]
+            return id,args,hr
 
     def parse2lev(self,data):
-        dictionary = {"0":"oshibka","G":"peredachua"}
-        id = data[0]
-        args = data[1]
-        mes = dictionary.get(id)
-        return mes + str(args)
+        dictionary = {"0":"error","G":"transmit"}
+        id,args,hr = data
+        if id in dictionary:
+            mes = dictionary.get(id) +"\twith args ="+str(args)+ "\thash = " + hr
+            if id == 'G':
+                mes += "\tdata =" + self.parse3lev(data[1][2][2:])
+            return mes
+        else:
+            return "There is no such command"
+
+    def parse3lev(self,data):
+        darr = data
+        barr = []
+        b_chunk = ""
+        for d_chunk in darr:
+            b_chunk += d_chunk
+            if (len(b_chunk) % 2) == 0: 
+                barr.append(b_chunk)
+                b_chunk = ""
+        mes = ""
+        for byte in barr:
+            mes += chr(int("0x"+byte,16))
+        return mes
 
 
 class MultiThread(MainProg):
@@ -81,7 +103,12 @@ class MultiThread(MainProg):
     def sock_uart_thread(self):
         while True:
             ret = self.transmit(self.sock,self.uart,socket_commands)
-            if ret == -1: break
+            if ret == -1: 
+                self.lock.acquire()
+                self.sock.tx("Stoppin sequence")
+                comm = self.com.command("6","0,0,0,0,0,0")
+                self.uart.tx(comm)
+                self.lock.release() 
 
             elif ret == 2: 
                 self.lock.acquire()
@@ -106,7 +133,12 @@ class MultiThread(MainProg):
                 self.uart.tx(comm)
                 self.lock.release()
 
-            elif ret == 5: pass
+            elif ret == 5:
+                self.lock.acquire()
+                self.sock.tx("Default settings")
+                comm = self.com.command("1","0,0,0.,0,0,9.8067")
+                self.uart.tx(comm)
+                self.lock.release() 
 
             elif ret == 6:
                 self.lock.acquire()
@@ -120,6 +152,13 @@ class MultiThread(MainProg):
                 comm = self.com.command("G",f"{addr},{retr},{mesarr}")
                 self.uart.tx(comm)
                 self.lock.release()
+
+            elif ret == 7:
+                self.lock.acquire()
+                self.sock.tx("Auto transmit")
+                comm = self.com.command("6","0,1000,1,1,1,1")
+                self.uart.tx(comm)
+                self.lock.release() 
 
             else: pass      
 
